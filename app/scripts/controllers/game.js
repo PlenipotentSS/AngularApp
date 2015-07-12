@@ -17,7 +17,7 @@ angular.module('angularAppApp')
 
     var base_speed = .25;
 
-    Crafty.init(1000,700, document.getElementById('game'));
+    Crafty.init(window.innerWidth-45,window.innerHeight, document.getElementById('game'));
 
     Crafty.e('Floor, 2D, Canvas, Color, table')
       .attr({x: 0, y: 250, w: 250, h: 10})
