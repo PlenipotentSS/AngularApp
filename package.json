@@ -30,7 +30,8 @@
     "karma-jasmine": "^0.3.6",
     "time-grunt": "^1.0.0",
     "angular-capitalize-filter": "^2.1.0",
-    "craftyjs": "^0.6.2"
+    "craftyjs": "^0.6.2",
+    "shifty": "^1.5.0"
   },
   "engines": {
     "node": ">=0.10.0"

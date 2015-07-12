@@ -35,6 +35,11 @@ angular
         controller: 'GameController',
         controllerAs: 'game'
       })
+      .when('/shifty', {
+        templateUrl: 'views/shifty.html',
+        controller: 'ShiftyController',
+        controllerAs: 'shifty'
+      })
       .when('/contact', {
         templateUrl: 'views/detail.html',
         controller: 'ContactController',
@@ -50,7 +55,7 @@ angular
       });
   });
 
-
+//crafty angular factory
 angular.module('angularAppApp')
   .factory('$crafty', function ($window) {
     var crafty = $window.Crafty || {};
@@ -80,4 +85,12 @@ angular.module('angularAppApp')
     };
 
     return crafty;
+  });
+
+//shifty angular factory
+angular.module('angularAppApp')
+  .factory('$shifty', function ($window) {
+    var tweenable = $window.Tweenable || {};
+
+    return tweenable;
   });
