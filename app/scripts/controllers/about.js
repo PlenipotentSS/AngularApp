@@ -37,5 +37,5 @@ angular.module('angularAppApp')
 
     $scope.addIndex = function(index) {
       $scope.items[index].likes += 1;
-    }
+    };
   }]);
