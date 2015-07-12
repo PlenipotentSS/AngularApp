@@ -48,7 +48,7 @@ angular.module('angularAppApp')
 
           to : {
             'x' : 320 * Math.random() - 160,
-            'y' : 480* Math.random() - 240,
+            'y' : 480 * Math.random() - 240,
             'rot' : Math.random() * 360,
             'scale' : Math.random() * 4.5 + 0.5,
             'backgroundColor' : '#ffff00'
