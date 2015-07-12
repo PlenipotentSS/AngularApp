@@ -26,9 +26,14 @@ angular
         controllerAs: 'main'
       })
       .when('/about', {
-        templateUrl: 'views/about.html',
+        templateUrl: 'views/detail.html',
         controller: 'AboutCtrl',
         controllerAs: 'about'
+      })
+      .when('/contact', {
+        templateUrl: 'views/detail.html',
+        controller: 'ContactCtrl',
+        controllerAs: 'contact'
       })
       .when('/styles/main.css', {
         templateUrl: 'views/about.html',

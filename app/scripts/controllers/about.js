@@ -15,7 +15,7 @@ angular.module('angularAppApp')
           'Karma'
     ];
 
-    $scope.title ="This song is crazy!";
+    $scope.title ="About!";
 
     $scope.items = [
       {
@@ -38,4 +38,5 @@ angular.module('angularAppApp')
     $scope.addIndex = function(index) {
       $scope.items[index].likes += 1;
     };
+
   }]);
