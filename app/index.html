@@ -37,9 +37,10 @@
 
           <div class="collapse navbar-collapse" id="js-navbar-collapse">
 
-            <ul class="nav navbar-nav" ng-controller="NavCtrl">
+            <ul class="nav navbar-nav" ng-controller="NavController">
               <li ng-class="{ active: isActive('/') }"><a href="#/">Home</a></li>
               <li ng-class="{ active: isActive('/about') }"><a ng-href="#/about">About</a></li>
+              <li ng-class="{ active: isActive('/crafty') }"><a ng-href="#/crafty">Crafty</a></li>
               <li ng-class="{ active: isActive('/contact') }"><a ng-href="#/contact">Contact</a></li>
             </ul>
           </div>
@@ -69,6 +70,7 @@
     <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
     <script src="bower_components/angular-touch/angular-touch.js"></script>
     <script src="bower_components/angular-capitalize-filter/capitalize.js"></script>
+    <script src="bower_components/crafty/dist/crafty.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
@@ -78,6 +80,7 @@
         <script src="scripts/controllers/about.js"></script>
         <script src="scripts/controllers/contact.js"></script>
         <script src="scripts/controllers/nav.js"></script>
+        <script src="scripts/controllers/game.js"></script>
         <!-- endbuild -->
 </body>
 </html>

@@ -8,7 +8,7 @@
  * Controller of the angularAppApp
  */
 angular.module('angularAppApp')
-  .controller('NavCtrl', function ($scope, $location) {
+  .controller('NavController', function ($scope, $location) {
     this.awesomeThings = [
       'HTML5 Boilerplate',
       'AngularJS',

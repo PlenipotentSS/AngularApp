@@ -6,7 +6,7 @@
 		<h1 class="title"> {{item.name | capitalize:'first'}}</h1>
 		<h2 class="date"> {{item.title}}</h2>
 		<div class="rating">
-			<p class="likes" ng-click="addIndex($index)">+ {{item.likes}}</p>
+			<p class="likes" ng-click="addIndex($index)">+ {{item.likes | currency}}</p>
 		</div>
 	</article>
 </div>

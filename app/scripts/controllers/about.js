@@ -8,7 +8,7 @@
  * Controller of the angularAppApp
  */
 angular.module('angularAppApp')
-  .controller('AboutCtrl', ['$scope', function ($scope) {
+  .controller('AboutController', ['$scope', function ($scope) {
     this.awesomeThings = [
           'HTML5 Boilerplate',
           'AngularJS',
@@ -19,7 +19,7 @@ angular.module('angularAppApp')
 
     $scope.items = [
       {
-        name: "bob",
+        name: "jimmy hopkins",
         title: "nothing",
         likes: 0
       },
@@ -38,5 +38,4 @@ angular.module('angularAppApp')
     $scope.addIndex = function(index) {
       $scope.items[index].likes += 1;
     };
-
   }]);

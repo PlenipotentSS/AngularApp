@@ -8,7 +8,7 @@
  * Controller of the angularAppApp
  */
 angular.module('angularAppApp')
-  .controller('ContactCtrl', function ($scope) {
+  .controller('ContactController', function ($scope) {
     this.awesomeThings = [
       'HTML5 Boilerplate',
       'AngularJS',
