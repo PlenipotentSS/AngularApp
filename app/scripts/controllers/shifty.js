@@ -3,6 +3,7 @@
 /**
  * @ngdoc function
  * @name angularAppApp.controller:ShiftyController
+ * https://github.com/jeremyckahn/shifty
  * @description
  * # ShiftyController
  * Controller of the angularAppApp
