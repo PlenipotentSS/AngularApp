@@ -19,7 +19,7 @@ angular.module('angularAppApp')
             var redisplay = function () {
               window.genealogic.remove();
               window.genealogic.generate({
-                json_input_genealogy: '/json/stevenson-tree.json',
+                json_input_genealogy: 'https://cdn.rawgit.com/PlenipotentSS/AngularApp/master/app/json/stevenson-tree.json',
                 packing_generation_factor: +document.getElementById('packing_generation_factor').value,
                 use_fixed_miniature: document.getElementById('use_fixed_miniature').checked,
                 miniature_photo_size: +document.getElementById('miniature_photo_size').value,
