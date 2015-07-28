@@ -138,7 +138,7 @@ angular.module('angularAppApp')
             svg_miniature_selector: 'svg#genealogic-miniature',
             miniature_photo_size: 300,
             packing_generation_factor: null, // default value is set later on as $genealogy_max_depth - 0.5
-            d3_color_scale: 'category20',
+            d3_color_scale: 'category20c',
             leaf_name_dy: '0.3em',
             leaf_caption_dy: '3em',
             wrapped_text_line_height_ems: 1.5,
@@ -187,15 +187,34 @@ angular.module('angularAppApp')
             tmp_img.src = img_href;
             return tmp_img.width > 0 && tmp_img.height > 0;
         },
-        pre_process_nodes = function (node, generation) {
+        pre_process_nodes = function (node, generation, index) {
+            var runningIndex = (typeof index !== 'undefined' ? index : 0);
             node.generation = (typeof node.generation !== 'undefined' ? node.generation : generation || 0);
+
+            if (!node.node_index && node.node_index != 0) {
+                node.node_index = runningIndex;
+            }
             if (node.partner) { // Adding as a child node
-                node.partner.by_alliance_with = node.name;
-                node.partner.generation = node.generation;
-                if (node.children) {
-                    node.children.push(node.partner);
+
+                if (node.partner instanceof Array ) {
+                    for (var i = 0; i < node.partner.length; i++) {
+                        var thisPartner = node.children[i]
+                        thisPartner.by_alliance_with = node.name;
+                        thisPartner.generation = node.generation;
+                        if (node.children) {
+                            node.children.push(thisPartner);
+                        } else {
+                            node.children = [node.partner];
+                        }
+                    }
                 } else {
-                    node.children = [node.partner];
+                    node.partner.by_alliance_with = node.name;
+                    node.partner.generation = node.generation;
+                    if (node.children) {
+                        node.children.push(node.partner);
+                    } else {
+                        node.children = [node.partner];
+                    }
                 }
             }
             if (node.children) { // Making a shallow child copy
@@ -206,8 +225,10 @@ angular.module('angularAppApp')
                 node.children.push(itself);
             }
             for (var i = 0; i < (node.children ? node.children.length : 0); i++) {
-                pre_process_nodes(node.children[i], node.generation + 1);
+                runningIndex = pre_process_nodes(node.children[i], node.generation + 1, runningIndex+1);
+                runningIndex += 1;
             }
+            return runningIndex;
         },
         get_max_depth = function (node) {
             var child_max_depth = 0;
@@ -219,14 +240,20 @@ angular.module('angularAppApp')
             }
             return child_max_depth + 1;
         },
-        convert_to_links = function (node) {
+        convert_to_links = function (node, index, parent) {
             var out_links = [];
             var node_itself = node.itself || node;
+            var parentIndex = parent;
+            var nextIndex;
+
+            index = (typeof index !== 'undefined' ? index : index || 0);
+            nextIndex = index+(node.children? node.children.length : 0);
             for (var j = 0; j < (node.children ? node.children.length : 0); j++) {
                 var child_node = node.children[j];
                 if (child_node === node_itself) { continue; }
-                out_links.push({source: node_itself, target: child_node.itself || child_node});
-                [].push.apply(out_links, convert_to_links(child_node));
+                out_links.push({i: index, parent: parentIndex, source: node_itself, target: child_node.itself || child_node});
+                [].push.apply(out_links, convert_to_links(child_node, nextIndex, index));
+                index = index + 1;
             }
             return out_links;
         },
@@ -257,7 +284,7 @@ angular.module('angularAppApp')
                 }
                 var words = content.split(/\s+/);
                 if (words.length === 1) {
-                    text_node.text(content);
+                    text_node.text(function(d) { return content.substring(0, d.r / 3); });
                     return;
                 }
                 var width = d.r * 2,
@@ -268,12 +295,15 @@ angular.module('angularAppApp')
                 for (var i = 0; i < words.length; i++) {
                     var word = words[i];
                     line.push(word);
-                    tspan.text(line.join(' '));
+                    tspan.text(function(d) { return line.join(' ').substring(0, d.r / 3); });
                     if (line.length > 1 && tspan.node().getComputedTextLength() > width) {
                         line.pop();
                         tspan.text(line.join(' '));
                         line = [word];
-                        tspan = text_node.append('tspan').attr('x', 0).attr('y', 0).text(word);
+                        tspan = text_node.append('tspan')
+                            .attr('x', 0)
+                            .attr('y', 0)
+                            .text(function(d) { return word.substring(0, d.r / 3); });
                         tspans.push(tspan);
                     }
                 }
@@ -289,6 +319,19 @@ angular.module('angularAppApp')
             if (d3.select(selector).empty()) {
                 throw new Error('No svg element found for selector: ' + selector);
             }
+        },
+        highlightParents = function (d) {
+
+
+            // console.log(d.i);
+            // console.log(d.parent);
+            // console.log(d3.select('#id-'+d.i));
+            // var colour = d3.event.type === 'mouseover' ? 'green' : '';
+            // var depth = d.d;
+            // for(var i = 0; i <= depth; i++) {
+            //     d3.select('#id-'+parseInt(d.i)).style('stroke', colour);
+            //     d = branches[d.parent];
+            // }   
         },
         generate = function (args) {
             var conf = extend({}, CONFIG_DEFAULTS, args),
@@ -326,38 +369,139 @@ angular.module('angularAppApp')
                     pack = d3.layout.pack()
                         .size([svg.attr('width'), svg.attr('height')])
                         .value(function(d) { return conf.packing_generation_factor - d.generation; }),
-                    node = svg.datum(json).selectAll('.node')
-                        .data(pack.nodes).enter()
-                        .append('svg:g')
-                            .attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; }),
-                    leaf = node.filter(function(d) { return !d.children; });
+                    node = svg.datum(json).selectAll('.node').data(pack.nodes),
+                    leaf;
+
+
+                svg.selectAll('line').data(links)
+                    .enter().append('svg:path')
+                    .attr('class', 'branch')
+                    // .attr('id', function(d) {return 'id-'+d.i;})
+                    .attr('parent', function(d) {return d.parent;})
+                    .style('stroke', function(d) { return d3.rgb(fill(d.target.by_alliance_with + 1)).darker(); })
+                    .style('opacity', .4)
+                    .attr('d', linkArc)
+                    .on('mouseover', highlightParents)
+                    .on('mouseout', highlightParents);
+
+                node = node.enter().append('svg:g')
+                            .attr('dx', function(d) { return d.x })
+                            .attr('dy', function(d) { return d.y })
+                            .attr('id', function(d) { return "node-"+d.node_index })
+                            .attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; })
+
+                leaf = node.filter(function(d) { return !d.children; });
+
+                leaf.append('svg:circle')
+                    .attr('class', 'leaf')
+                    .style('opacity', .7)
+                    .attr('r', function(d) { return d.r; })
+                    .style('fill', function(d) { return fill(d.generation + (d.by_alliance_with ? 0.5 : 0)); })
+                    .style('stroke', function(d) { return d3.rgb(fill(d.generation + (d.by_alliance_with ? 0.5 : 0))).darker(); })
+                    .on('mouseover', function (d) {
+                        // miniature_mouseover(d, (conf.use_fixed_miniature ? d3.select(conf.svg_miniature_selector).select('circle') : d3.select(this)));
+                        var left = d3.select(this.parentNode)[0][0].getAttribute('dx'),
+                            top = d3.select(this.parentNode)[0][0].getAttribute('dy')-50,
+                            currentR = parseInt(d3.select(this).attr('r')),
+                            origR = parseInt(d3.select(this).attr('origr')),
+                            bubble = d;
+
+                        if (d.name == "?") {
+                            $('.node-details').html("Unknown " + (d.caption||""))
+                        } else {
+                            $('.node-details').html(d.name + " " + (d.caption||""))
+                        }
+                        $('.node-details').css('left',parseInt(left))
+                        $('.node-details').css('top',parseInt(top))
+                        $('.node-details').addClass("active")
+                        $('html').addClass('path-visible');
+
+                        d3.select('.leaf.hovered').attr('class', 'leaf')
+
+                        while (bubble) {
+                            d3.select("#node-"+bubble.node_index+' circle')
+                                .attr('class', 'leaf hovered')
+                            d3.select("#node-"+bubble.node_index+' text')
+                                .attr('class', 'leaf hovered')
+
+                            bubble = bubble.parent
+                        }
+
+
+                    })
+                    .on('mouseout', function (d) {
+                        var bubble = d;
+
+                        $('html').removeClass('path-visible');
+                        $('.node-details').removeClass("active");
+
+                        while (bubble) {
+                            d3.select("#node-"+bubble.node_index+" circle")
+                                .attr('class', 'leaf')
+                            d3.select("#node-"+bubble.node_index+" text")
+                                .attr('class', 'leaf')
+
+                            bubble = bubble.parent
+                        }
+                    });
 
                 leaf.append('svg:text')
                     .attr('class', 'leaf name')
                     .attr('dy', conf.leaf_name_dy)
                     // Ugly homonyms handling: 'name' can contain digits to distinguish people, which are stripped below
-                    .call(wrap_text, 'name', conf.wrapped_text_line_height_ems, true);
-                leaf.filter(function(d) { return d.caption; }).append('svg:text')
-                    .attr('class', 'leaf caption')
-                    .attr('dy', conf.leaf_caption_dy)
-                    .call(wrap_text, 'caption', conf.wrapped_text_line_height_ems);
-                leaf.append('svg:circle')
-                    .attr('class', 'leaf')
-                    .attr('r', function(d) { return d.r; })
-                    .style('fill', function(d) { return fill(d.generation + (d.by_alliance_with ? 0.5 : 0)); })
-                    .style('stroke', function(d) { return d3.rgb(fill(d.generation + (d.by_alliance_with ? 0.5 : 0))).darker(); })
+                    .call(wrap_text, 'name', conf.wrapped_text_line_height_ems, true)
                     .on('mouseover', function (d) {
-                        miniature_mouseover(d, (conf.use_fixed_miniature ? d3.select(conf.svg_miniature_selector).select('circle') : d3.select(this)));
+                        var bubble = d;
+
+                        var left = d3.select(this.parentNode)[0][0].getAttribute('dx'),
+                            top = d3.select(this.parentNode)[0][0].getAttribute('dy')-50;
+
+                        if (d.name == "?") {
+                            $('.node-details').html("Unknown " + (d.caption||""))
+                        } else {
+                            $('.node-details').html(d.name + " " + (d.caption||""))
+                        }
+                        $('.node-details').css('left',parseInt(left))
+                        $('.node-details').css('top',parseInt(top))
+                        $('.node-details').addClass("active")
+                        $('html').addClass('path-visible');
+
+                        d3.select('.leaf.hovered').attr('class', 'leaf')
+                        $('.leaf.hovered').removeClass("hovered");
+                        while (bubble) {
+
+                            d3.select("#node-"+bubble.node_index+" circle")
+                                .attr('class', 'leaf hovered')
+                            d3.select("#node-"+bubble.node_index+" text")
+                                .attr('class', 'leaf hovered')
+
+                            bubble = bubble.parent
+                        }
+
                     })
                     .on('mouseout', function (d) {
-                        miniature_mouseout(d, (conf.use_fixed_miniature ? d3.select(conf.svg_miniature_selector).select('circle') : d3.select(this)));
+                        var bubble = d;
+
+                        $('html').removeClass('path-visible');
+                        $('.node-details').removeClass("active");
+                        $('.leaf.hovered').removeClass("hovered");
+
+                        while (bubble) {
+
+                            d3.select("#node-"+bubble.node_index+" circle")
+                                .attr('class', 'leaf hovered')
+                            d3.select("#node-"+bubble.node_index+" text")
+                                .attr('class', 'leaf hovered')
+
+                            bubble = bubble.parent
+                        }
                     });
 
-                svg.selectAll('line').data(links)
-                    .enter().append('svg:path')
-                    .attr('class', 'branch')
-                    .style('stroke', function(d) { return d3.rgb(fill(d.target.by_alliance_with + 1)).darker(); })
-                    .attr('d', linkArc);
+
+                // leaf.filter(function(d) { return d.caption; }).append('svg:text')
+                //     .attr('class', 'leaf caption')
+                //     .attr('dy', conf.leaf_caption_dy)
+                //     .call(wrap_text, 'caption', conf.wrapped_text_line_height_ems);
 
                 if (conf.post_rendering_callback) {
                     conf.post_rendering_callback();

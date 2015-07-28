@@ -7,10 +7,27 @@ path.branch {
   stroke-width: 1.5px;
   stroke-dasharray: 5, 5;
   stroke-opacity: .5;
+  cursor: pointer;
 }
 text.leaf {
   font: 11px sans-serif;
   text-anchor: middle;
+  cursor: pointer;
+  transition: all .4s ease-in-out;
+
+  tspan {
+    transition: all .4s ease-in-out;
+  }
+
+  html.path-visible & {
+    &:not(.hovered) {
+      opacity: .5 !important;
+
+      tspan {
+        opacity: .5 !important;
+      }
+    }
+  }
 }
 text.leaf.caption {
   font: 7px sans-serif;
@@ -24,4 +41,41 @@ svg#genealogic-miniature {
 circle.miniature.filled_with_img {
   stroke: black;
   stroke-width: 2px;
+}
+
+circle {
+  cursor: pointer;
+  transition: all .4s ease-in-out;
+
+  html.path-visible & {
+
+    &:not(.hovered) {
+      fill: #fff !important;
+      opacity: .1 !important;
+    }
+
+    &.hovered {
+      z-index: 100;
+      transform: scale(1.1);
+    }
+  }
+}
+
+.tree-wrapper {
+  position: relative; 
+
+  .node-details {
+    position: absolute;
+    background: #fff;
+    opacity: .9;
+    border-radius: 10px;
+    padding: 5px 8px;
+    display: none;
+    border: 1px solid #ddd;
+    transition: all .4s ease-in-out;
+
+    &.active {
+      display: block;
+    }
+  }
 }
